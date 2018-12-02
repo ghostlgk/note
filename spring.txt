@@ -1,0 +1,196 @@
+ConversionService
+
+TypeConverter
+
+TypeDescriptor
+
+bean的生命周期		
+ 	实例化之前
+ 	实例化
+ 	实例化之后
+ 	设置属性之前
+ 	设置属性
+ 	BeanNameWare
+ 	postProcessBeforeInitialization
+ 	afterPropertiesSet
+ 	init-method
+ 	postProcessAfterInitialization
+  
+
+spring基于xml的容器  
+BeanDefinitionReader
+	XmlBeanDefinitionReader
+		BeanDefinitionDocumentReader 解析xml文档 注册bean定义
+			loadBeanDefinitions() 加载bean定义
+	NamespaceHandlerResolver
+		resolve() 根据命名空间解析出对应的NameSpaceHandler 默认搜索META-INF/spring.handlers
+	NameSpaceHandler 
+		init() 子类重写该方法注册标签解析器
+	BeanDefinitionParser
+		parse() 解析标签注册到容器中
+		
+spring基于注解的容器
+	AnnotationConfigApplicationContext AnnotationConfigWebApplicationContext
+	
+	AnnotatedBeanDefinitionReader 	需要编程式添加Bean 
+		AnnotationConfigUtils.registerAnnotationConfigProcessors(
+	ClassPathBeanDefinitionScanner  扫描包并注册bean (component)
+		扫描指定的包 默认启用自动配置功能
+		AnnotationConfigUtils.registerAnnotationConfigProcessors(
+	AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
+		ConfigurationClassPostProcessor
+		AutowiredAnnotationBeanPostProcessor
+		CommonAnnotationBeanPostProcessor
+		PersistenceAnnotationBeanPostProcessor
+		EventListenerMethodProcessor
+		DefaultEventListenerFactory
+
+refresh()
+	prepareRefresh() 准备环境(创建环境时将属性源添加到环境中)
+	obtainFreshBeanFactory() 创建benFactory、加载bean定义
+		refreshBeanFactory() 子类创建工厂返回 或者子类已经拥有工厂对象 
+	prepareBeanFactory() 配置bean工厂
+		ignoreDependencyInterface()spring在设置bean属性时,忽略指定的接口 而是通过其他方式完成bean的依赖
+		registerResolvableDependency(BeanFactory.class, beanFacotry)  如果一个bean有对应的属性需要注入,spring注入指定类型
+	postProcessBeanFactory() 子类对bean工厂进行特殊配置(加载bean 但bean未初始化)
+	invokeBeanFactoryPostProcessors() 创建容器中工厂处理器并调用
+	registerBeanPostProcessors() 创建容器中的bean处理器
+	initMessageSource()
+	initApplicationEventMulticaster() 创建事件发布器
+	onRefresh() 子类实现 在特殊上下文创建特殊的bean(springmvc)
+	registerListeners()创建事件监听器
+	finishBeanFactoryInitialization() 创建bean
+	finishRefresh()
+		initLifecycleProcessor() 创建生命周期处理器
+		getLifecycleProcessor().onRefresh() 
+		publishEvent() 发布容器刷新事件
+
+
+Joinpoint
+	MethodInvocation
+		List<MethodInterceptor>
+Advice 
+	MethodInterceptor
+ 
+Advisor
+	PointcutAdvisor
+		{
+			Advice(Spring AspectJ) spring通过适配器将不同类型的Advice转换为MethodInterceptor
+			Pointcut
+		}
+
+Pointcut	
+	{	
+		ClassFilter
+		MethodMatcher
+	}
+	
+Advised
+ List<Advisor>
+ List<Interface>	
+ 
+AopProxyFactory
+ createAopProxy(Advised)
+	JDK(Advised)
+	CGLIB(Advised)
+
+AbstractAutoProxyCreator 自动生成代理(bean处理器 查找所以的Advisor 再根据Pointcut匹配)
+		BeanNameAutoProxyCreator
+		DefaultAdvisorAutoProxyCreator <aop:advisor>
+			getAdvicesAndAdvisorsForBean()  找到所有Advisor进行过滤
+				createProxy() 使用ProxyFactory --> AopProxyFactory
+					buildAdvisors() 
+						DefaultAdvisorAdapterRegistry进行Advisor转换
+		AnnotationAwareAspectJAutoProxyCreator 
+	
+	AdvisorAdapterRegistrationManager bean处理器 注册自定义的Advisor适配器
+		DefaultAdvisorAdapterRegistry
+		
+AspectJ	
+	AspectMetadata 
+	AspectInstanceFactory 从spring容器中获取或通过反射创建
+	AspectJAdvisorFactory 解析被@AspectJ注解类 创建Advisor
+
+TX
+	TransactionInterceptor
+		事务管理器 TXManger
+		事务属性源 TransactionAttributeSource
+			NameMatchTransactionAttributeSource <MethodName, TXAttr>
+	基于注解的事物 Spring会注册一个Advisor		
+	invoke()
+		获取事务属性源-->获取事务属性-->获取事物管理器
+		
+		
+DispatcherServlet(方法处理器 方法返回值处理器  json处理方式)
+	init()
+		1、将servlet的配置参数设置为对象属性
+		2、创建SpringMVC容器 
+			configureAndRefreshWebApplicationContext()
+			getServletContext().setAttribute()
+		3、DispatcherServlet重写onRefresh()	设置SpringMVC需要的组件
+	doService()
+		request.setAttribute() 设置springMVC容器
+		获取Handler
+			基于URL的映射规则
+			基于注解的映射规则
+		获取Adapter
+		处理请求 返回MV
+		解析视图
+		如果存在MV 渲染视图	
+	
+Spring事件 refresh() close() stop() start()
+SpringBoot事件
+	ApplicationStartingEvent 注册监听器之后调用
+	ApplicationEnvironmentPreparedEvent 创建好环境
+	ApplicationContextInitializedEvent 创建上下文但未加载bean定义	
+	ApplicationPreparedEvent 加载springboot的bean定义 但未调用refresh()
+	ApplicationStartedEvent 应用已经启动 但未调用ApplicationRunner CommandLineRunner
+	ApplicationReadyEvent 应用已经初始化完成
+	ApplicationFailedEvent 应用启动失败
+	
+	
+explain
+
+索引项(key+point)
+指向记录的指针包括磁盘块的标识符和块内偏移量
+
+有序索引(BTree)
+	聚集索引(主索引) 记录按照key的排序规则进行了排序(索引和数据位于内存)
+		稠密索引 为每个key建立一个索引项
+		稀疏索引 为一些key建立索引项
+	辅助索引
+	前缀索引
+	覆盖索引 一个索引包含了所有需要查询的字段的值
+散列索引
+
+全文索引 FULLTEXT
+
+读已提交   读取被锁定行的最新一份快照数据 (读操作不进行加锁 写操作加锁 遇到写锁不会阻塞)
+可重复读   读取事务开始时的行数据版本 (读操作不进行加锁 写操作加锁 遇到写锁不会阻塞  其他事物无法update delete)
+序列化     对读取的数据进行加锁  遇到写锁阻塞  
+
+REDIS
+同步
+ 从服务器发送SYNC命令
+ 主服务器生成RDB文件发送给从服务器 同时在缓存中记录从现在开始执行的所有写命令
+命令传播(部分重同步)
+ 复制偏移量
+ 复制积压缓冲区 命令传播时不仅将命令发送给从服务器 还将命令写入缓冲区
+ 
+
+哨兵读取配置文件 向主服务器建立两个连接(命令连接 订阅连接)
+哨兵每隔10秒向主服务器发送INFO 获取主服务器信息
+ 主观下线 客观下线 哨兵选举 故障转移
+
+
+MapperRegistry
+通过Configuration添加Mapper时解析方法上的注解
+在解析注解之前会读取同一目录下的xml文件	
+	
+	
+	
+	
+	
+	
+	
+	
